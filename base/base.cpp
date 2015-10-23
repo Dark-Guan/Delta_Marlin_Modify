@@ -1012,6 +1012,7 @@ void setup() {
 //	disableallmotor();
 }
 
+
 void loop() {
 
 //check parameter
@@ -1320,8 +1321,7 @@ void process_commands() {
 
 		case 17:
 			SERIAL_ECHOLN("enable_x");
-			enable_x()
-			;
+			enable_x();
 			break;
 		case 18:
 			SERIAL_ECHOLN("disable_x");
@@ -1402,161 +1402,163 @@ void prepare_move() {
 
 #ifdef SCARA //for now same as delta-code
 
-		float difference[NUM_AXIS];
+	float difference[NUM_AXIS];
+	for (int8_t i = 0; i < NUM_AXIS; i++) {
+		difference[i] = destination[i] - current_position[i];
+	}
+
+	float cartesian_mm = sqrt(
+			sq(difference[X_AXIS]) +
+			sq(difference[Y_AXIS]) +
+			sq(difference[Z_AXIS]));
+	if (cartesian_mm < 0.000001) {
+		cartesian_mm = abs(difference[E_AXIS]);
+	}
+	if (cartesian_mm < 0.000001) {
+		return;
+	}
+	float seconds = 6000 * cartesian_mm / feedrate / feedmultiply;
+	int steps = max(1, int(scara_segments_per_second * seconds));
+	//SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
+	//SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
+	//SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
+	for (int s = 1; s <= steps; s++) {
+		float fraction = float(s) / float(steps);
 		for (int8_t i = 0; i < NUM_AXIS; i++) {
-			difference[i] = destination[i] - current_position[i];
+			destination[i] = current_position[i] + difference[i] * fraction;
 		}
 
-		float cartesian_mm = sqrt(
-				sq(difference[X_AXIS]) +
-				sq(difference[Y_AXIS]) +
-				sq(difference[Z_AXIS]));
-		if (cartesian_mm < 0.000001) {
-			cartesian_mm = abs(difference[E_AXIS]);
-		}
-		if (cartesian_mm < 0.000001) {
-			return;
-		}
-		float seconds = 6000 * cartesian_mm / feedrate / feedmultiply;
-		int steps = max(1, int(scara_segments_per_second * seconds));
-		//SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
-		//SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
-		//SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
-		for (int s = 1; s <= steps; s++) {
-			float fraction = float(s) / float(steps);
-			for (int8_t i = 0; i < NUM_AXIS; i++) {
-				destination[i] = current_position[i] + difference[i] * fraction;
-			}
+		calculate_delta(destination);
+		//SERIAL_ECHOPGM("destination[X_AXIS]="); SERIAL_ECHOLN(destination[X_AXIS]);
+		//SERIAL_ECHOPGM("destination[Y_AXIS]="); SERIAL_ECHOLN(destination[Y_AXIS]);
+		//SERIAL_ECHOPGM("destination[Z_AXIS]="); SERIAL_ECHOLN(destination[Z_AXIS]);
+		//SERIAL_ECHOPGM("delta[X_AXIS]="); SERIAL_ECHOLN(delta[X_AXIS]);
+		//SERIAL_ECHOPGM("delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
+		//SERIAL_ECHOPGM("delta[Z_AXIS]="); SERIAL_ECHOLN(delta[Z_AXIS]);
 
-			calculate_delta(destination);
-			//SERIAL_ECHOPGM("destination[X_AXIS]="); SERIAL_ECHOLN(destination[X_AXIS]);
-			//SERIAL_ECHOPGM("destination[Y_AXIS]="); SERIAL_ECHOLN(destination[Y_AXIS]);
-			//SERIAL_ECHOPGM("destination[Z_AXIS]="); SERIAL_ECHOLN(destination[Z_AXIS]);
-			//SERIAL_ECHOPGM("delta[X_AXIS]="); SERIAL_ECHOLN(delta[X_AXIS]);
-			//SERIAL_ECHOPGM("delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
-			//SERIAL_ECHOPGM("delta[Z_AXIS]="); SERIAL_ECHOLN(delta[Z_AXIS]);
-
-			plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
-					destination[E_AXIS], feedrate * feedmultiply / 60 / 100.0,
-					active_extruder);
-		}
+		plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+				destination[E_AXIS], feedrate * feedmultiply / 60 / 100.0,
+				active_extruder);
+	}
 #endif // SCARA
 
 #ifdef DELTA
-		float difference[NUM_AXIS];
-		for (int8_t i=0; i < NUM_AXIS; i++) {
-			difference[i] = destination[i] - current_position[i];
+	float difference[NUM_AXIS];
+	for (int8_t i=0; i < NUM_AXIS; i++) {
+		difference[i] = destination[i] - current_position[i];
+	}
+	float cartesian_mm = sqrt(sq(difference[X_AXIS]) +
+			sq(difference[Y_AXIS]) +
+			sq(difference[Z_AXIS]));
+	if (cartesian_mm < 0.000001) {cartesian_mm = abs(difference[E_AXIS]);}
+	if (cartesian_mm < 0.000001) {return;}
+	float seconds = 6000 * cartesian_mm / feedrate / feedmultiply;
+	int steps = max(1, int(delta_segments_per_second * seconds));
+	// SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
+	// SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
+	// SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
+	for (int s = 1; s <= steps; s++) {
+		float fraction = float(s) / float(steps);
+		for(int8_t i=0; i < NUM_AXIS; i++) {
+			destination[i] = current_position[i] + difference[i] * fraction;
 		}
-		float cartesian_mm = sqrt(sq(difference[X_AXIS]) +
-				sq(difference[Y_AXIS]) +
-				sq(difference[Z_AXIS]));
-		if (cartesian_mm < 0.000001) {cartesian_mm = abs(difference[E_AXIS]);}
-		if (cartesian_mm < 0.000001) {return;}
-		float seconds = 6000 * cartesian_mm / feedrate / feedmultiply;
-		int steps = max(1, int(delta_segments_per_second * seconds));
-		// SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
-		// SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
-		// SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
-		for (int s = 1; s <= steps; s++) {
-			float fraction = float(s) / float(steps);
-			for(int8_t i=0; i < NUM_AXIS; i++) {
-				destination[i] = current_position[i] + difference[i] * fraction;
-			}
-			calculate_delta(destination);
+		calculate_delta(destination);
 #ifdef NONLINEAR_BED_LEVELING
-			adjust_delta(destination);
+		adjust_delta(destination);
 #endif
-			plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
-					destination[E_AXIS], feedrate*feedmultiply/60/100.0,
-					active_extruder);
-		}
+		plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+				destination[E_AXIS], feedrate*feedmultiply/60/100.0,
+				active_extruder);
+	}
 
 #endif // DELTA
 
 #ifdef DUAL_X_CARRIAGE
-		if (active_extruder_parked)
+	if (active_extruder_parked)
+	{
+		if (dual_x_carriage_mode == DXC_DUPLICATION_MODE && active_extruder == 0)
 		{
-			if (dual_x_carriage_mode == DXC_DUPLICATION_MODE && active_extruder == 0)
-			{
-				// move duplicate extruder into correct duplication position.
-				plan_set_position(inactive_extruder_x_pos, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-				plan_buffer_line(current_position[X_AXIS] + duplicate_extruder_x_offset, current_position[Y_AXIS], current_position[Z_AXIS],
-						current_position[E_AXIS], max_feedrate[X_AXIS], 1);
-				plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-				st_synchronize();
-				extruder_duplication_enabled = true;
-				active_extruder_parked = false;
-			}
-			else if (dual_x_carriage_mode == DXC_AUTO_PARK_MODE) // handle unparking of head
-			{
-				if (current_position[E_AXIS] == destination[E_AXIS])
-				{
-					// this is a travel move - skit it but keep track of current position (so that it can later
-					// be used as start of first non-travel move)
-					if (delayed_move_time != 0xFFFFFFFFUL)
-					{
-						memcpy(current_position, destination, sizeof(current_position));
-						if (destination[Z_AXIS] > raised_parked_position[Z_AXIS])
-						raised_parked_position[Z_AXIS] = destination[Z_AXIS];
-						delayed_move_time = millis();
-						return;
-					}
-				}
-				delayed_move_time = 0;
-				// unpark extruder: 1) raise, 2) move into starting XY position, 3) lower
-				plan_buffer_line(raised_parked_position[X_AXIS], raised_parked_position[Y_AXIS], raised_parked_position[Z_AXIS], current_position[E_AXIS], max_feedrate[Z_AXIS], active_extruder);
-				plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], raised_parked_position[Z_AXIS],
-						current_position[E_AXIS], min(max_feedrate[X_AXIS],max_feedrate[Y_AXIS]), active_extruder);
-				plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],
-						current_position[E_AXIS], max_feedrate[Z_AXIS], active_extruder);
-				active_extruder_parked = false;
-			}
+			// move duplicate extruder into correct duplication position.
+			plan_set_position(inactive_extruder_x_pos, current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+			plan_buffer_line(current_position[X_AXIS] + duplicate_extruder_x_offset, current_position[Y_AXIS], current_position[Z_AXIS],
+					current_position[E_AXIS], max_feedrate[X_AXIS], 1);
+			plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+			st_synchronize();
+			extruder_duplication_enabled = true;
+			active_extruder_parked = false;
 		}
+		else if (dual_x_carriage_mode == DXC_AUTO_PARK_MODE) // handle unparking of head
+		{
+			if (current_position[E_AXIS] == destination[E_AXIS])
+			{
+				// this is a travel move - skit it but keep track of current position (so that it can later
+				// be used as start of first non-travel move)
+				if (delayed_move_time != 0xFFFFFFFFUL)
+				{
+					memcpy(current_position, destination, sizeof(current_position));
+					if (destination[Z_AXIS] > raised_parked_position[Z_AXIS])
+					raised_parked_position[Z_AXIS] = destination[Z_AXIS];
+					delayed_move_time = millis();
+					return;
+				}
+			}
+			delayed_move_time = 0;
+			// unpark extruder: 1) raise, 2) move into starting XY position, 3) lower
+			plan_buffer_line(raised_parked_position[X_AXIS], raised_parked_position[Y_AXIS], raised_parked_position[Z_AXIS], current_position[E_AXIS], max_feedrate[Z_AXIS], active_extruder);
+			plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], raised_parked_position[Z_AXIS],
+					current_position[E_AXIS], min(max_feedrate[X_AXIS],max_feedrate[Y_AXIS]), active_extruder);
+			plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],
+					current_position[E_AXIS], max_feedrate[Z_AXIS], active_extruder);
+			active_extruder_parked = false;
+		}
+	}
 #endif //DUAL_X_CARRIAGE
 
 #if ! (defined DELTA || defined SCARA || defined PAINT)
-		// Do not use feedmultiply for E or Z only moves
-		if ((current_position[X_AXIS] == destination[X_AXIS])
-				&& (current_position[Y_AXIS] == destination[Y_AXIS])) {
-			plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
-					destination[Z_AXIS], destination[E_AXIS], feedrate / 60,
-					active_extruder);
-		} else {
-			plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
-					destination[Z_AXIS], destination[E_AXIS],
-					feedrate * feedmultiply / 60 / 100.0, active_extruder);
-		}
+	// Do not use feedmultiply for E or Z only moves
+	if ((current_position[X_AXIS] == destination[X_AXIS])
+			&& (current_position[Y_AXIS] == destination[Y_AXIS])) {
+		plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
+				destination[Z_AXIS], destination[E_AXIS], feedrate / 60,
+				active_extruder);
+	} else {
+		plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
+				destination[Z_AXIS], destination[E_AXIS],
+				feedrate * feedmultiply / 60 / 100.0, active_extruder);
+	}
 #endif // !(DELTA || SCARA ||PAINT)
 
-	}
+}
 
-	for (int8_t i = 0; i < NUM_AXIS; i++) {
-		current_position[i] = destination[i];
-		//计算一次block，运行一次
+for(int8_t i = 0; i < NUM_AXIS; i++)
+{
+	current_position[i] = destination[i];
+	//计算一次block，运行一次
 //			MYSERIAL.print(i);
 //			SERIAL_ECHO(" cur posi ");
 //			MYSERIAL.println(current_position[i]);
 //			MYSERIAL.print(i);
 //			SERIAL_ECHO(" destination ");
 //			MYSERIAL.println(destination[i]);
-	}
+}
 }
 
+
 void calculate_paint(float cartesian[3]) {
-	delta[X_AXIS] = cartesian[X_AXIS];
-	delta[Y_AXIS] = cartesian[Y_AXIS];
-	delta[Z_AXIS] = cartesian[Z_AXIS];
+delta[X_AXIS] = cartesian[X_AXIS];
+delta[Y_AXIS] = cartesian[Y_AXIS];
+delta[Z_AXIS] = cartesian[Z_AXIS];
 
-	//调试用
-	/*
-	 SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-	 SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-	 SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
+//调试用
+/*
+ SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+ SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+ SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
 
-	 SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
-	 SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-	 SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
-	 */
+ SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
+ SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+ SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
+ */
 }
 //计算左边转换，这里步需要左边转换
 void calculate_delta(float cartesian[3]) {
@@ -1572,66 +1574,66 @@ void calculate_delta(float cartesian[3]) {
 //                       - sq(delta_tower3_x-cartesian[X_AXIS])
 //                       - sq(delta_tower3_y-cartesian[Y_AXIS])
 //                       ) + cartesian[Z_AXIS];
-	/*
-	 SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-	 SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-	 SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
+/*
+ SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+ SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+ SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
 
-	 SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
-	 SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-	 SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
-	 */
+ SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
+ SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+ SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
+ */
 }
 
 void get_coordinates() {
-	bool seen[4] = { false, false, false, false };
-	for (int8_t i = 0; i < NUM_AXIS; i++) {
-		if (code_seen(axis_codes[i])) {
-			destination[i] = (float) code_value()
-					+ (axis_relative_modes[i] || relative_mode)
-							* current_position[i];
-			seen[i] = true;
-		} else
-			destination[i] = current_position[i]; //Are these else lines really needed?
+bool seen[4] = { false, false, false, false };
+for (int8_t i = 0; i < NUM_AXIS; i++) {
+	if (code_seen(axis_codes[i])) {
+		destination[i] = (float) code_value()
+				+ (axis_relative_modes[i] || relative_mode)
+						* current_position[i];
+		seen[i] = true;
+	} else
+		destination[i] = current_position[i]; //Are these else lines really needed?
 //		SERIAL_ECHO(" get_coordinates ");
 //		MYSERIAL.print(i);
 //		SERIAL_ECHO(" destination ");
 //		MYSERIAL.println(destination[i]);
-	}
-	if (code_seen('F')) {
-		next_feedrate = code_value();
-		if (next_feedrate > 0.0)
-			feedrate = next_feedrate;
-	}
+}
+if (code_seen('F')) {
+	next_feedrate = code_value();
+	if (next_feedrate > 0.0)
+		feedrate = next_feedrate;
+}
 }
 
 float code_value() {
-	return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1],
-	NULL));
+return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1],
+NULL));
 }
 
 bool code_seen(char code) {
-	strchr_pointer = strchr(cmdbuffer[bufindr], code);
-	return (strchr_pointer != NULL);  //Return True if a character was found
+strchr_pointer = strchr(cmdbuffer[bufindr], code);
+return (strchr_pointer != NULL);  //Return True if a character was found
 }
 
 void FlushSerialRequestResend() {
-	//char cmdbuffer[bufindr][100]="Resend:";
-	MYSERIAL.flush();
+//char cmdbuffer[bufindr][100]="Resend:";
+MYSERIAL.flush();
 //  SERIAL_PROTOCOLPGM(MSG_RESEND);
-	SERIAL_PROTOCOLLN(gcode_LastN + 1);
+SERIAL_PROTOCOLLN(gcode_LastN + 1);
 //  ClearToSend();
 }
 void serial_echopair_P(const char *s_P, float v) {
-	serialprintPGM(s_P);
-	SERIAL_ECHO(v);
+serialprintPGM(s_P);
+SERIAL_ECHO(v);
 }
 void serial_echopair_P(const char *s_P, double v) {
-	serialprintPGM(s_P);
-	SERIAL_ECHO(v);
+serialprintPGM(s_P);
+SERIAL_ECHO(v);
 }
 void serial_echopair_P(const char *s_P, unsigned long v) {
-	serialprintPGM(s_P);
-	SERIAL_ECHO(v);
+serialprintPGM(s_P);
+SERIAL_ECHO(v);
 }
 

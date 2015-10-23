@@ -26,9 +26,13 @@
 #define WALK_MOTOR 2
 #define TURN_MOTOR 3 //程序对转向做单独处理
 
+
+//使用PAINT机械参数7轴，冗余一轴
+#define PAINT
 /******************************
  *机械参数计算
  */
+
 //PI 圆周率
 #define MATH_PI 3.1415926
 
@@ -78,11 +82,15 @@
 #define LIFT_WHEEL_PULSES_PER_CYCLR (SLIDE_MOTOR_SUBDIVDE*SLIDE_MOTOR_STEPS_PER_CYCLE)
 #define LIFT_PULSES_PER_UNIT ((SLIDE_WHEEL_PULSES_PER_CYCLR)/(SLIDE_DRIVER_TEETH*SLIDE_BELT_MOFULES))
 
+
+
 //使用梯形加速
 //参数设置：
 //移動 1 mm 的 step 數
+#ifdef PAINT
 #define DEFAULT_AXIS_STEPS_PER_UNIT {SLIDE_PULSES_PER_UNIT,LIFT_PULSES_PER_UNIT, \
 	WALK_PULSES_PER_UNIT_WHEEL,TURN_PULSES_PER_ANGLE_BELT}
+#endif //define /**
 
 #define DEFAULT_MAX_FEEDRATE {500,500,500,500}//可容許的最大 nominal speed mm/sec
 #define DEFAULT_MAX_ACCELERATION {5000,5000,5000,5000}//可容許的最大加速度mm/sec^2
@@ -116,8 +124,7 @@
 #define SLIDE_MAX_POSITION 6000 //mm //待确认
 
 
-//#define SCARA
-#define PAINT
+
 //規畫兩條路徑的連接速度時，會對初速度做計算
 
 //default stepper release if idle //保护电机，暂时不用
