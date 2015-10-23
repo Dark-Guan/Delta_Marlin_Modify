@@ -71,11 +71,12 @@ float st_get_position_mm(uint8_t axis);
 void st_wake_up();
 
   
-void checkHitEndstops(); //call from somwhere to create an serial error message with the locations the endstops where hit, in case they were triggered
+void checkHitEndstops(); //call from somewhere to create an serial error message with the locations the endstops where hit, in case they were triggered
 void endstops_hit_on_purpose(); //avoid creation of the message, i.e. after homeing and before a routine call of checkHitEndstops();
 
 void enable_endstops(bool check); // Enable/disable endstop checking
 
+//has not been finished
 void checkStepperErrors(); //Print errors detected by the stepper
 
 void finishAndDisableSteppers();
@@ -83,6 +84,7 @@ void finishAndDisableSteppers();
 extern block_t *current_block;  // A pointer to the block currently being traced
 
 void quickStop();
+
 
 void digitalPotWrite(int address, int value);
 void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2);

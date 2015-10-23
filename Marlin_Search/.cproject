@@ -16,7 +16,7 @@
 					<folderInfo id="it.baeyens.arduino.core.toolChain.release.690485726.623099113" name="/" resourcePath="">
 						<toolChain id="it.baeyens.arduino.core.toolChain.release.1634325300" name="Arduino Toolchain" superClass="it.baeyens.arduino.core.toolChain.release">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="it.baeyens.arduino.targetplatform.287832295" name="Arduino Target" osList="all" superClass="it.baeyens.arduino.targetplatform"/>
-							<builder buildPath="${workspace_loc:/Marlin_Search}/Release" id="it.baeyens.arduino.sketch.builder.1217256125" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Arduino sketch builder" superClass="it.baeyens.arduino.sketch.builder"/>
+							<builder buildPath="${workspace_loc:/Marlin_Search}/Release" id="it.baeyens.arduino.sketch.builder.1217256125" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Arduino sketch builder" parallelBuildOn="false" superClass="it.baeyens.arduino.sketch.builder"/>
 							<tool id="it.baeyens.arduino.tool.sketch.compiler.cpp.866587814" name="Arduino C++ Compiler" superClass="it.baeyens.arduino.tool.sketch.compiler.cpp">
 								<option id="it.baeyens.arduino.compiler.cpp.sketch.option.incpath.1236777468" name="Include Paths (-I)" superClass="it.baeyens.arduino.compiler.cpp.sketch.option.incpath" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Marlin_Search/arduino/core}&quot;"/>
@@ -57,5 +57,9 @@
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/Marlin_Search"/>
+		</configuration>
+	</storageModule>
 </cproject>

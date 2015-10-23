@@ -101,7 +101,8 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 void plan_set_e_position(const float &e);
 
 
-void printablock(block_t *block);
+void printablock(block_t *block);//add by Dark to print a block message
+
 void check_axes_activity();
 
 uint8_t movesplanned(); //return the nr of buffered moves
