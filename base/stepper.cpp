@@ -165,6 +165,21 @@ asm volatile ( \
 #define ENABLE_STEPPER_DRIVER_INTERRUPT()  TIMSK1 |= (1<<OCIE1A)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
+char checkEndstopsHit() {
+
+	if (endstop_x_hit) {
+		return X_AXIS;
+	}
+	if (endstop_y_hit) {
+		return Y_AXIS;
+	}
+	if (endstop_z_hit) {
+		return Z_AXIS;
+	}
+
+	return -1;
+}
+
 void checkHitEndstops() {
 	if (endstop_x_hit || endstop_y_hit || endstop_z_hit) {
 		SERIAL_ECHO_START;
@@ -321,7 +336,7 @@ FORCE_INLINE void trapezoid_generator_reset() {
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
 ISR(TIMER1_COMPA_vect) {
-	// If there is no current block, attempt to pop one from the buffer
+// If there is no current block, attempt to pop one from the buffer
 	if (current_block == NULL) {
 		// Anything in the buffer?
 		current_block = plan_get_current_block();
@@ -412,9 +427,9 @@ ISR(TIMER1_COMPA_vect) {
 
 		// Set direction en check limit switches
 #ifndef COREXY
-		if ((out_bits & (1 << X_AXIS)) != 0) {   // stepping along -X axis
+		if ((out_bits & (1 << X_AXIS)) != 0) {  // stepping along -X axis
 #else
-			if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) != 0)) { //-X occurs for -A and -B
+				if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) != 0)) { //-X occurs for -A and -B
 #endif
 			CHECK_ENDSTOPS {
 #ifdef DUAL_X_CARRIAGE
@@ -424,10 +439,19 @@ ISR(TIMER1_COMPA_vect) {
 #endif
 				{
 #if defined(X_MIN_PIN) && X_MIN_PIN > -1
-					bool x_min_endstop=(READ(X_MIN_PIN) != X_MIN_ENDSTOP_INVERTING);
-					if(x_min_endstop && old_x_min_endstop && (current_block->steps_x > 0)) {
+					bool x_min_endstop = (READ(X_MIN_PIN)
+							!= X_MIN_ENDSTOP_INVERTING);
+					if (x_min_endstop && old_x_min_endstop
+							&& (current_block->steps_x > 0)) {
 						endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
-						endstop_x_hit=true;
+//#if defined (PAINTTEST)
+//						quickStop();
+////refresh the X_AXIS CURRENT_POSITION
+//						current_position[X_AXIS] =
+//								(double) (count_position[X_AXIS]
+//										/ axis_steps_per_unit[X_AXIS]);
+//#endif
+						endstop_x_hit = true;
 						step_events_completed = current_block->step_event_count;
 					}
 					old_x_min_endstop = x_min_endstop;
@@ -448,6 +472,14 @@ ISR(TIMER1_COMPA_vect) {
 					if (x_max_endstop && old_x_max_endstop
 							&& (current_block->steps_x > 0)) {
 						endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
+
+//#if defined (PAINTTEST)
+//						quickStop();
+////refresh the X_AXIS CURRENT_POSITION
+//						current_position[X_AXIS] =
+//								(double) (count_position[X_AXIS]
+//										/ axis_steps_per_unit[X_AXIS]);
+//#endif
 						endstop_x_hit = true;
 						step_events_completed = current_block->step_event_count;
 					}
@@ -460,7 +492,7 @@ ISR(TIMER1_COMPA_vect) {
 #ifndef COREXY
 		if ((out_bits & (1 << Y_AXIS)) != 0) {   // -direction
 #else
-			if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) == 0)) { // -Y occurs for -A and +B
+				if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) == 0)) { // -Y occurs for -A and +B
 #endif
 			CHECK_ENDSTOPS {
 #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
@@ -477,7 +509,7 @@ ISR(TIMER1_COMPA_vect) {
 			CHECK_ENDSTOPS {
 #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
 				bool y_max_endstop =
-						(READ(Y_MAX_PIN) != Y_MAX_ENDSTOP_INVERTING);
+				(READ(Y_MAX_PIN) != Y_MAX_ENDSTOP_INVERTING);
 				if (y_max_endstop && old_y_max_endstop
 						&& (current_block->steps_y > 0)) {
 					endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
@@ -500,7 +532,7 @@ ISR(TIMER1_COMPA_vect) {
 			CHECK_ENDSTOPS {
 #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
 				bool z_min_endstop =
-						(READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
+				(READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
 				if (z_min_endstop && old_z_min_endstop
 						&& (current_block->steps_z > 0)) {
 					endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
@@ -521,7 +553,7 @@ ISR(TIMER1_COMPA_vect) {
 			CHECK_ENDSTOPS {
 #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
 				bool z_max_endstop =
-						(READ(Z_MAX_PIN) != Z_MAX_ENDSTOP_INVERTING);
+				(READ(Z_MAX_PIN) != Z_MAX_ENDSTOP_INVERTING);
 				if (z_max_endstop && old_z_max_endstop
 						&& (current_block->steps_z > 0)) {
 					endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
@@ -819,7 +851,7 @@ void st_init() {
 #if defined(Y_ENABLE_PIN) && Y_ENABLE_PIN > -1
 	SET_OUTPUT(Y_ENABLE_PIN);
 	if (!Y_ENABLE_ON)
-		WRITE(Y_ENABLE_PIN, HIGH);
+	WRITE(Y_ENABLE_PIN, HIGH);
 
 #if defined(Y_DUAL_STEPPER_DRIVERS) && defined(Y2_ENABLE_PIN) && (Y2_ENABLE_PIN > -1)
 	SET_OUTPUT(Y2_ENABLE_PIN);
@@ -856,7 +888,7 @@ void st_init() {
 #if defined(X_MIN_PIN) && X_MIN_PIN > -1
 	SET_INPUT(X_MIN_PIN);
 #ifdef ENDSTOPPULLUP_XMIN
-	WRITE(X_MIN_PIN,HIGH);
+	WRITE(X_MIN_PIN, HIGH);
 #endif
 #endif
 
@@ -926,12 +958,11 @@ void st_init() {
 #endif
 #if defined(E0_STEP_PIN) && (E0_STEP_PIN > -1)
 	SET_OUTPUT(E0_STEP_PIN);
-	WRITE(E0_STEP_PIN, INVERT_E_STEP_PIN);
-	disable_e0();
+	WRITE(E0_STEP_PIN, INVERT_E_STEP_PIN);disable_e0();
 #endif
 #if defined(E1_STEP_PIN) && (E1_STEP_PIN > -1)
 	SET_OUTPUT(E1_STEP_PIN);
-	WRITE(E1_STEP_PIN, INVERT_E_STEP_PIN); disable_e1();
+	WRITE(E1_STEP_PIN, INVERT_E_STEP_PIN);disable_e1();
 #endif
 #if defined(E2_STEP_PIN) && (E2_STEP_PIN > -1)
 	SET_OUTPUT(E2_STEP_PIN);
@@ -1026,8 +1057,7 @@ void finishAndDisableSteppers() {
 	st_synchronize();
 	disable_x();
 	disable_y();
-	disable_z();
-	disable_e0(); disable_e1(); disable_e2();
+	disable_z();disable_e0();disable_e1();disable_e2();
 }
 
 void quickStop() {

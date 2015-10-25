@@ -15,7 +15,7 @@ base.cpp.d base.cpp.o: ../base.cpp ../Marlin.h ../fastio.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/Arduino.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/WString.h \
   ../base.h ../planner.h ../stepper.h ../watchdog.h \
-  ../ConfigurationStore.h \
+  ../ConfigurationStore.h ../language.h \
   E:\Arduino\arduino-1.5.6-r2\libraries\TimerOne/TimerOne.h \
   E:\Arduino\arduino-1.5.6-r2\libraries\FlexiTimer2/FlexiTimer2.h
 
@@ -66,6 +66,8 @@ E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/WString.h:
 ../watchdog.h:
 
 ../ConfigurationStore.h:
+
+../language.h:
 
 E:\Arduino\arduino-1.5.6-r2\libraries\TimerOne/TimerOne.h:
 

@@ -1,12 +1,12 @@
 // Do not remove the include below
 #include "Marlin.h"
 #include "base.h"
-#include "pins.h"
+//#include "pins.h"
 #include "stepper.h"
 #include "configuration_paint.h"
 #include "watchdog.h"
 #include "ConfigurationStore.h"
-#include "fastio.h"
+#include "language.h"
 #include "planner.h"
 
 //引入定时器
@@ -151,6 +151,7 @@ void initialPins() {
 
 	digitalWrite(SLIDE_TOP_ENDSTOP, HIGH);
 	digitalWrite(SLIDE_BOTTOM_ENDSTOP, HIGH);
+	digitalWrite(SLIDE_TRIGER_ENDSTOP, HIGH);
 
 	digitalWrite(LIFT_TOP_ENDSTOP, HIGH);
 	digitalWrite(LIFT_BOTTOM_ENDSTOP, HIGH);
@@ -816,20 +817,23 @@ void timerpulsetest(float para) {
 
 //检查线路
 void checkendstop() {
-	MYSERIAL.print("RUN!");
-	MYSERIAL.print("SLIDE_TRIGER_ENDSTOP  =  ");
+//	MYSERIAL.println("RUN!");
+	SERIAL_ECHOPGM("SLIDE_TRIGER_ENDSTOP  =  ");
 	MYSERIAL.println(digitalRead(SLIDE_TRIGER_ENDSTOP));
-	MYSERIAL.print("SLIDE_TOP_ENDSTOP  =  ");
+
+	SERIAL_ECHOPGM("SLIDE_TOP_ENDSTOP  =  ");
 	MYSERIAL.println(digitalRead(SLIDE_TOP_ENDSTOP));
-	MYSERIAL.print("SLIDE_BOTTOM_ENDSTOP =  ");
+
+	SERIAL_ECHOPGM("SLIDE_BOTTOM_ENDSTOP =  ");
 	MYSERIAL.println(digitalRead(SLIDE_BOTTOM_ENDSTOP));
 
-	MYSERIAL.print("LIFT_BOTTOM_ENDSTOP =  ");
+	SERIAL_ECHOPGM("LIFT_BOTTOM_ENDSTOP =  ");
 	MYSERIAL.println(digitalRead(LIFT_BOTTOM_ENDSTOP));
 
-	MYSERIAL.print("Front-Right-EndStop =  ");
+	SERIAL_ECHOPGM("Front-Right-EndStop =  ");
 	MYSERIAL.println(digitalRead(FRONT_RIGHT_STOP));
-	MYSERIAL.print("Front-Left-EndStop = ");
+
+	SERIAL_ECHOPGM("Front-Left-EndStop = ");
 	MYSERIAL.println(digitalRead(FRONT_LEFT_STOP));
 }
 
@@ -1107,6 +1111,13 @@ void loop() {
 		buflen = (buflen - 1);
 		bufindr = (bufindr + 1) % BUFSIZE;
 	}
+
+	//check heater every n milliseconds
+	//need real time manageer
+//	  manage_heater();
+//	  manage_inactivity();
+	checkHitEndstops();
+//	  lcd_update();
 }
 
 void get_command() {
@@ -1207,7 +1218,7 @@ void get_command() {
 				//收到命令 发送回来
 
 //				SERIAL_ECHOLN(cmdbuffer[bufindw]);
-				SERIAL_ECHOLN("OK"); //收到有效指令发出OK
+				SERIAL_PROTOCOLLN("ok"); //收到有效指令发出OK
 				bufindw = (bufindw + 1) % BUFSIZE;
 				buflen += 1;
 			}
@@ -1306,7 +1317,7 @@ void process_commands() {
 					}
 				}
 #endif //FWRETRACT
-				enable_endstops(false);
+//				enable_endstops(false);
 				prepare_move();
 //				ClearToSend();
 //
@@ -1343,9 +1354,34 @@ void process_commands() {
 			disable_y()
 			;
 			break;
+		case 114: // M114
+			SERIAL_PROTOCOLPGM("X:");
+			SERIAL_PROTOCOL(current_position[X_AXIS]);
+			SERIAL_PROTOCOLPGM(" Y:");
+			SERIAL_PROTOCOL(current_position[Y_AXIS]);
+			SERIAL_PROTOCOLPGM(" Z:");
+			SERIAL_PROTOCOL(current_position[Z_AXIS]);
+			SERIAL_PROTOCOLPGM(" E:");
+			SERIAL_PROTOCOL(current_position[E_AXIS]);
+
+			SERIAL_PROTOCOLPGM(MSG_COUNT_X);
+			SERIAL_PROTOCOL(
+					float(st_get_position(X_AXIS))
+							/ axis_steps_per_unit[X_AXIS]);
+			SERIAL_PROTOCOLPGM(" Y:");
+			SERIAL_PROTOCOL(
+					float(st_get_position(Y_AXIS))
+							/ axis_steps_per_unit[Y_AXIS]);
+			SERIAL_PROTOCOLPGM(" Z:");
+			SERIAL_PROTOCOL(
+					float(st_get_position(Z_AXIS))
+							/ axis_steps_per_unit[Z_AXIS]);
+
+			SERIAL_PROTOCOLLN("");
+			break;
 		case 119: //print the end stops state
 			SERIAL_ECHOLN("Check Stops!");
-			void checkendstop();
+			checkendstop();
 			break;
 		}
 	}
@@ -1361,6 +1397,10 @@ void prepare_move() {
 
 	float difference[NUM_AXIS];
 	for (int8_t i = 0; i < NUM_AXIS; i++) {
+
+#if defined(PAINTTEST)
+
+#endif
 		difference[i] = destination[i] - current_position[i];
 
 //		MYSERIAL.print(i);
@@ -1395,6 +1435,12 @@ void prepare_move() {
 //	SERIAL_ECHOLN(steps);
 
 	for (int s = 1; s <= steps; s++) {
+		char endstop = checkEndstopsHit();
+		if (endstop == X_AXIS || endstop == Y_AXIS || endstop == Z_AXIS) {
+			SERIAL_ECHOPGM("STOP!");
+			return;
+		}
+
 		float fraction = float(s) / float(steps);
 		for (int8_t i = 0; i < NUM_AXIS; i++) {
 			destination[i] = current_position[i] + difference[i] * fraction;
@@ -1426,7 +1472,17 @@ void prepare_move() {
 				destination[E_AXIS], feedrate * feedmultiply / 60 / 100.0,
 				active_extruder);
 #endif
-
+//每次都更新坐标
+		for (int8_t i = 0; i < NUM_AXIS; i++) {
+			current_position[i] = destination[i];
+			//计算一次block，运行一次
+			//			MYSERIAL.print(i);
+			//			SERIAL_ECHO(" cur posi ");
+			//			MYSERIAL.println(current_position[i]);
+			//			MYSERIAL.print(i);
+			//			SERIAL_ECHO(" destination ");
+			//			MYSERIAL.println(destination[i]);
+		}
 #endif
 
 #ifdef SCARA //for now same as delta-code
@@ -1544,21 +1600,23 @@ void prepare_move() {
 #endif //DUAL_X_CARRIAGE
 
 #if ! (defined DELTA || defined SCARA || defined PAINT)
-		// Do not use feedmultiply for E or Z only moves
-		if ((current_position[X_AXIS] == destination[X_AXIS])
-				&& (current_position[Y_AXIS] == destination[Y_AXIS])) {
-			plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
-					destination[Z_AXIS], destination[E_AXIS], feedrate / 60,
-					active_extruder);
-		} else {
-			plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
-					destination[Z_AXIS], destination[E_AXIS],
-					feedrate * feedmultiply / 60 / 100.0, active_extruder);
-		}
+//		// Do not use feedmultiply for E or Z only moves
+//		if ((current_position[X_AXIS] == destination[X_AXIS])
+//				&& (current_position[Y_AXIS] == destination[Y_AXIS])) {
+//			plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
+//					destination[Z_AXIS], destination[E_AXIS], feedrate / 60,
+//					active_extruder);
+//		} else {
+//			plan_buffer_line(destination[X_AXIS], destination[Y_AXIS],
+//					destination[Z_AXIS], destination[E_AXIS],
+//					feedrate * feedmultiply / 60 / 100.0, active_extruder);
+//		}
 #endif // !(DELTA || SCARA ||PAINT)
 
 	}
 
+	//更新坐标位置
+	//不在命令最后更新坐标
 	for (int8_t i = 0; i < NUM_AXIS; i++) {
 		current_position[i] = destination[i];
 		//计算一次block，运行一次

@@ -508,16 +508,17 @@
 
 #define BEEPER             33
 
-#elif defined(PAINTTEST)
-#define X_STEP_PIN         SLIDE_STEP_PIN
-#define X_DIR_PIN          SLIDE_DIR_PIN
-#define X_ENABLE_PIN       SLIDE_ENABLE_PIN
-#define X_MIN_PIN          -1//SLIDE_BOTTOM_ENDSTOP
-#define X_MAX_PIN          -1//SLIDE_TRIGER_ENDSTOP //这里是slide 顶墙的设置
 
-#define Y_STEP_PIN         LIFT_STEP_PIN
-#define Y_DIR_PIN          LIFT_DIR_PIN
-#define Y_ENABLE_PIN       LIFT_ENABLE_PIN
+#elif defined(PAINTTEST)
+#define X_STEP_PIN         2//(SLIDE_STEP_PIN*1)
+#define X_DIR_PIN          3//SLIDE_DIR_PIN
+#define X_ENABLE_PIN       4//SLIDE_ENABLE_PIN
+#define X_MIN_PIN          52//SLIDE_BOTTOM_ENDSTOP
+#define X_MAX_PIN          39//SLIDE_TRIGER_ENDSTOP //这里是slide 顶墙的设置
+
+#define Y_STEP_PIN         5//LIFT_STEP_PIN
+#define Y_DIR_PIN          6//LIFT_DIR_PIN
+#define Y_ENABLE_PIN       -1//LIFT_ENABLE_PIN
 #define Y_MIN_PIN          -1//LIFT_BOTTOM_ENDSTOP // unused for deltabot, was 14
 #define Y_MAX_PIN          -1//LIFT_TOP_ENDSTOP
 
