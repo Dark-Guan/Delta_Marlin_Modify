@@ -91,9 +91,9 @@ void plan_buffer_line(float x, float y, float z, const float &e, float feed_rate
 // Get the position applying the bed level matrix if enabled
 vector_3 plan_get_position();
 #elif defined(PAINT) //if define the PAINT,
-void plan_buffer_line(const float &x, const float &y, const float &z,
+void plan_buffer_line(const float &x, const float &y, const float &z,const float &e,
 		const float &u, const float &v, const float &w,
-		const float &e, float feed_rate, const uint8_t &extruder);
+		float feed_rate, const uint8_t &extruder);
 #else
 void plan_buffer_line(const float &x, const float &y, const float &z,
 		const float &e, float feed_rate, const uint8_t &extruder);
@@ -120,8 +120,19 @@ uint8_t movesplanned(); //return the nr of buffered moves
 
 extern unsigned long minsegmenttime;
 extern float max_feedrate[4]; // set the max speeds
+
+#ifdef PAINT
+extern float axis_steps_per_unit[7]; //Use M92 to override by software
+#else
 extern float axis_steps_per_unit[4];
+#endif
+#ifdef PAINT
+//for paint allow 7 axis
+extern unsigned long max_acceleration_units_per_sq_second[7]; // Use M201 to override by software
+#else
 extern unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
+#endif
+
 extern float minimumfeedrate;
 extern float acceleration; // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
 extern float retract_acceleration; //  mm/s^2   filament pull-pack and push-forward  while standing still in the other axis M204 TXXXX

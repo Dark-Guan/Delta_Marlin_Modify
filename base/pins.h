@@ -48,6 +48,7 @@
 //限位开关端口定义
 #define SLIDE_TOP_ENDSTOP 53
 #define SLIDE_BOTTOM_ENDSTOP 52
+#define SLIDE_TRIGER_ENDSTOP 39
 
 #define LIFT_TOP_ENDSTOP 51
 #define LIFT_BOTTOM_ENDSTOP 50
@@ -507,6 +508,79 @@
 
 #define BEEPER             33
 
+#elif defined(PAINTTEST)
+#define X_STEP_PIN         SLIDE_STEP_PIN
+#define X_DIR_PIN          SLIDE_DIR_PIN
+#define X_ENABLE_PIN       SLIDE_ENABLE_PIN
+#define X_MIN_PIN          -1//SLIDE_BOTTOM_ENDSTOP
+#define X_MAX_PIN          -1//SLIDE_TRIGER_ENDSTOP //这里是slide 顶墙的设置
+
+#define Y_STEP_PIN         LIFT_STEP_PIN
+#define Y_DIR_PIN          LIFT_DIR_PIN
+#define Y_ENABLE_PIN       LIFT_ENABLE_PIN
+#define Y_MIN_PIN          -1//LIFT_BOTTOM_ENDSTOP // unused for deltabot, was 14
+#define Y_MAX_PIN          -1//LIFT_TOP_ENDSTOP
+
+#define Z_STEP_PIN         46
+#define Z_DIR_PIN          48
+#define Z_ENABLE_PIN       62
+#define Z_MIN_PIN          -1//18 // autolevel for deltabot
+#define Z_MAX_PIN          -1//19
+
+#ifdef PAINT
+#define U_STEP_PIN         -1 //U axis for PAINT
+#define U_DIR_PIN          -1
+#define U_ENABLE_PIN       -1
+#define U_MIN_PIN          -1
+#define U_MAX_PIN          -1
+
+#define V_STEP_PIN         -1
+#define V_DIR_PIN          -1
+#define V_ENABLE_PIN       -1
+#define V_MIN_PIN          -1 // autolevel for deltabot
+#define V_MAX_PIN          -1
+
+#define W_STEP_PIN         -1
+#define W_DIR_PIN          -1
+#define W_ENABLE_PIN       -1
+#define W_MIN_PIN          -1 // autolevel for deltabot
+#define W_MAX_PIN          -1
+#endif  // PAINT
+
+#define Y2_STEP_PIN        -1 //disable prevent
+#define Y2_DIR_PIN         -1
+#define Y2_ENABLE_PIN      -1
+
+#define Z2_STEP_PIN        -1
+#define Z2_DIR_PIN         -1
+#define Z2_ENABLE_PIN      -1
+
+#define E0_STEP_PIN        26 //save the extruder
+#define E0_DIR_PIN         28
+#define E0_ENABLE_PIN      24
+
+#define E1_STEP_PIN        36
+#define E1_DIR_PIN         34
+#define E1_ENABLE_PIN      30
+
+#if MOTHERBOARD == 68
+#define E2_STEP_PIN        23
+#define E2_DIR_PIN         25
+#define E2_ENABLE_PIN      40
+
+#define E3_STEP_PIN        27
+#define E3_DIR_PIN         29
+#define E3_ENABLE_PIN      41
+
+#define E4_STEP_PIN        43
+#define E4_DIR_PIN         37
+#define E4_ENABLE_PIN      42
+#endif
+
+#define SDPOWER            -1
+#define SDSS               53
+#define LED_PIN            13
+
 #else
 
 #define X_STEP_PIN         54
@@ -580,6 +654,7 @@
 #define SDPOWER            -1
 #define SDSS               53
 #define LED_PIN            13
+
 #endif
 
 #if MOTHERBOARD == 33 || MOTHERBOARD == 35 || MOTHERBOARD == 67 || MOTHERBOARD == 68

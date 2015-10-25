@@ -19,7 +19,7 @@
 #define SERIAL_RATE 115200
 
 //定义各轴对应的角标
-#define NUM_AXIS  4
+//#define NUM_AXIS  4
 
 #define SLIDE_MOTOR 0
 #define LIFT_MOTOR 1
@@ -28,7 +28,7 @@
 
 
 //使用PAINT机械参数7轴，冗余一轴
-#define PAINT
+//#define PAINT
 /******************************
  *机械参数计算
  */
@@ -87,38 +87,38 @@
 //使用梯形加速
 //参数设置：
 //移動 1 mm 的 step 數
-#ifdef PAINT
-#define DEFAULT_AXIS_STEPS_PER_UNIT {SLIDE_PULSES_PER_UNIT,LIFT_PULSES_PER_UNIT, \
-	WALK_PULSES_PER_UNIT_WHEEL,TURN_PULSES_PER_ANGLE_BELT}
-#endif //define /**
+//#ifdef PAINT
+//#define DEFAULT_AXIS_STEPS_PER_UNIT {SLIDE_PULSES_PER_UNIT,LIFT_PULSES_PER_UNIT, \
+//	WALK_PULSES_PER_UNIT_WHEEL,TURN_PULSES_PER_ANGLE_BELT}
+//#endif //define /**
 
-#define DEFAULT_MAX_FEEDRATE {500,500,500,500}//可容許的最大 nominal speed mm/sec
-#define DEFAULT_MAX_ACCELERATION {5000,5000,5000,5000}//可容許的最大加速度mm/sec^2
+//#define DEFAULT_MAX_FEEDRATE {500,500,500,500}//可容許的最大 nominal speed mm/sec
+//#define DEFAULT_MAX_ACCELERATION {5000,5000,5000,5000}//可容許的最大加速度mm/sec^2
 //#define DEFAULT_ACCELERATION {300,300,300,300}// 預設的加速度值 ，不同位置的位置的电机要有不同的加速度mm/sec^2
 
 
-#define HOMING_FEEDRATE {50*60, 50*60, 50*60, 0}  // set the homing speeds (mm/min)
+//#define HOMING_FEEDRATE {50*60, 50*60, 50*60, 0}  // set the homing speeds (mm/min)
 
-#define AXIS_RELATIVE_MODES {false, false, false, false}
+//#define AXIS_RELATIVE_MODES {false, false, false, false}
 
-#define DEFAULT_ACCELERATION          500    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+//#define DEFAULT_ACCELERATION          500    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 //#define DEFAULT_ACCELERATION          3000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  3000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
-#define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
-#define DEFAULT_MINTRAVELFEEDRATE     0.0
+//#define DEFAULT_RETRACT_ACCELERATION  3000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
+//#define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
+//#define DEFAULT_MINTRAVELFEEDRATE     0.0
 //初速度设置：
-#define DEFAULT_X_JERK 5.0 // mm/sec
-#define DEFAULT_Y_JERK 5.0 // mm/sec
-#define DEFAULT_Zlift_JERK 5.0// mm/sec
-#define DEFAULT_Zroll_JERK 5.0 // mm/sec
+//#define DEFAULT_X_JERK 5.0 // mm/sec
+//#define DEFAULT_Y_JERK 5.0 // mm/sec
+//#define DEFAULT_Zlift_JERK 5.0// mm/sec
+//#define DEFAULT_Zroll_JERK 5.0 // mm/sec
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
-#define DEFAULT_XYJERK                20.0    // (mm/sec)
-#define DEFAULT_ZJERK                 20.0    // (mm/sec)
-#define DEFAULT_EJERK                 20.0   // (mm/sec)
+//#define DEFAULT_XYJERK                20.0    // (mm/sec)
+//#define DEFAULT_ZJERK                 20.0    // (mm/sec)
+//#define DEFAULT_EJERK                 20.0   // (mm/sec)
 
 // minimum time in microseconds that a movement needs to take if the buffer is emptied.
-#define DEFAULT_MINSEGMENTTIME        20000
+//#define DEFAULT_MINSEGMENTTIME        20000
 
 //机械尺寸参数
 #define SLIDE_MAX_POSITION 6000 //mm //待确认
@@ -128,7 +128,7 @@
 //規畫兩條路徑的連接速度時，會對初速度做計算
 
 //default stepper release if idle //保护电机，暂时不用
-#define DEFAULT_STEPPER_DEACTIVE_TIME 60
+//#define DEFAULT_STEPPER_DEACTIVE_TIME 60
 
 //超声波传感器参数
 #define US_DEFAULT_MAX_DISTANCE 4500 //mm

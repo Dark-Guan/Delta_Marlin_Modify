@@ -162,7 +162,7 @@ void manage_inactivity();
 #endif
 
 #ifdef PAINT
-enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3,U_AXIS = 4,V_AXIS = 4,W_AXIS = 4};
+enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3,U_AXIS = 4,V_AXIS = 5,W_AXIS = 6};
 #else
 enum AxisEnum {
 	X_AXIS = 0, Y_AXIS = 1, Z_AXIS = 2, E_AXIS = 3

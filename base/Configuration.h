@@ -1,6 +1,9 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+//引入paint设置
+#include "configuration_paint.h"
+
 // This configuration file contains the basic settings.
 // Advanced settings can be found in Configuration_adv.h
 // BASIC SETTINGS: select your board type, temperature sensor type, axis scaling, and endstop configuration
@@ -105,6 +108,7 @@
 //===========================================================================
 // Enable PAINT kinematics
 //#define PAINT
+#define PAINTTEST //use the X Y to driver the slide and lift
 
 // Make delta curves from many straight lines (linear interpolation).
 // This is a trade-off between visible corners (not enough segments)
@@ -351,7 +355,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define DISABLE_E false // For all extruders
 
 #define INVERT_X_DIR false    // for Mendel set to false, for Orca set to true
-#define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
+#define INVERT_Y_DIR true//false //by dark adjust     // for Mendel set to true, for Orca set to false
 #define INVERT_Z_DIR false    // for Mendel set to false, for Orca set to true
 #define INVERT_E0_DIR true//false   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
@@ -402,7 +406,6 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
   #define Z_RAISE_BEFORE_PROBING 100  //How much the extruder will be raised before traveling to the first probing point.
   #define Z_RAISE_BETWEEN_PROBINGS 5  //How much the extruder will be raised when traveling from between next probing points
-
 
   //If defined, the Probe servo will be turned on only during movement and then turned off to avoid jerk
   //The value is the delay to turn the servo off after powered on - depends on the servo speed; 300ms is good value, but you can try lower it.
@@ -468,8 +471,14 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define XYZ_BELT_PITCH 2
 #define XYZ_PULLEY_TEETH 16
 #define XYZ_STEPS (XYZ_FULL_STEPS_PER_ROTATION * XYZ_MICROSTEPS / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH))
+//此处使用double来提高精度
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {XYZ_STEPS, XYZ_STEPS, XYZ_STEPS, 93.5}//{157}
+//for paint
+#define DEFAULT_AXIS_STEPS_PER_UNIT {SLIDE_PULSES_PER_UNIT,LIFT_PULSES_PER_UNIT, \
+	WALK_PULSES_PER_UNIT_WHEEL,TURN_PULSES_PER_ANGLE_BELT}
+
+//#define DEFAULT_AXIS_STEPS_PER_UNIT   {XYZ_STEPS, XYZ_STEPS, XYZ_STEPS, 93.5}//{157}
+
 #define DEFAULT_MAX_FEEDRATE          {999, 999, 999, 999}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {200,200,100,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 

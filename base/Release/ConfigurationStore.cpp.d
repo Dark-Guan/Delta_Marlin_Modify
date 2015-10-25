@@ -1,6 +1,6 @@
 ConfigurationStore.cpp.d ConfigurationStore.cpp.o:  \
  ../ConfigurationStore.cpp ../Marlin.h ../fastio.h ../Configuration.h \
-  ../Configuration_adv.h ../pins.h \
+  ../configuration_paint.h ../Configuration_adv.h ../pins.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/arduino.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/binary.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/WCharacter.h \
@@ -21,6 +21,8 @@ ConfigurationStore.cpp.d ConfigurationStore.cpp.o:  \
 ../fastio.h:
 
 ../Configuration.h:
+
+../configuration_paint.h:
 
 ../Configuration_adv.h:
 

@@ -1,5 +1,6 @@
 base.cpp.d base.cpp.o: ../base.cpp ../Marlin.h ../fastio.h \
-  ../Configuration.h ../Configuration_adv.h ../pins.h \
+  ../Configuration.h ../configuration_paint.h ../Configuration_adv.h \
+  ../pins.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/arduino.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/binary.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/WCharacter.h \
@@ -13,8 +14,8 @@ base.cpp.d base.cpp.o: ../base.cpp ../Marlin.h ../fastio.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\variants\mega/pins_arduino.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/Arduino.h \
   E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/WString.h \
-  ../base.h ../planner.h ../stepper.h ../configuration_paint.h \
-  ../watchdog.h ../ConfigurationStore.h \
+  ../base.h ../planner.h ../stepper.h ../watchdog.h \
+  ../ConfigurationStore.h \
   E:\Arduino\arduino-1.5.6-r2\libraries\TimerOne/TimerOne.h \
   E:\Arduino\arduino-1.5.6-r2\libraries\FlexiTimer2/FlexiTimer2.h
 
@@ -23,6 +24,8 @@ base.cpp.d base.cpp.o: ../base.cpp ../Marlin.h ../fastio.h \
 ../fastio.h:
 
 ../Configuration.h:
+
+../configuration_paint.h:
 
 ../Configuration_adv.h:
 
@@ -59,8 +62,6 @@ E:\Arduino\arduino-1.5.6-r2\hardware\arduino\avr\cores\arduino/WString.h:
 ../planner.h:
 
 ../stepper.h:
-
-../configuration_paint.h:
 
 ../watchdog.h:
 

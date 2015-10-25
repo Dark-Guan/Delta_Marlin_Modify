@@ -63,14 +63,17 @@
 //===========================================================================
 
 unsigned long minsegmenttime;
-float max_feedrate[4]; // set the max speeds
+
 #ifdef PAINT
+float max_feedrate[7]; // set the max speeds
 float axis_steps_per_unit[7];
+unsigned long max_acceleration_units_per_sq_second[7]; // Use M201 to override by software
 #else
+unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
 float axis_steps_per_unit[4];
+float max_feedrate[4]; // set the max speeds
 #endif
 
-unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
 float minimumfeedrate;
 float acceleration; // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
 float retract_acceleration; //  mm/s^2   filament pull-pack and push-forward  while standing still in the other axis M204 TXXXX
@@ -544,7 +547,7 @@ void plan_buffer_line(float x, float y, float z, const float &e, float feed_rate
 
 void plan_buffer_line(const float &x, const float &y, const float &z,
 		const float &u, const float &v, const float &w,
-		const float &e, float feed_rate, const uint8_t &extruder);
+		 float feed_rate, const uint8_t &extruder);
 #else
 void plan_buffer_line(const float &x, const float &y, const float &z,
 		const float &e, float feed_rate, const uint8_t &extruder)

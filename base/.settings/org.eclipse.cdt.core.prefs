@@ -298,7 +298,7 @@ environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.B
 environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.BOARD_NAME/value=Arduino Mega or Mega 2560
 environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.COM_PORT/delimiter=;
 environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.COM_PORT/operation=replace
-environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.COM_PORT/value=COM11
+environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.COM_PORT/value=COM32
 environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.EXTRA.C.COMPILE/delimiter=;
 environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.EXTRA.C.COMPILE/operation=replace
 environment/project/it.baeyens.arduino.core.toolChain.release.670336399/JANTJE.EXTRA.C.COMPILE/value=
