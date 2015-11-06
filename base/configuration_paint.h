@@ -6,7 +6,6 @@
  */
 #include <avr/pgmspace.h>
 
-
 #ifndef CONFIGURATION_H_
 #define CONFIGURATION_H_
 
@@ -25,7 +24,6 @@
 #define LIFT_MOTOR 1
 #define WALK_MOTOR 2
 #define TURN_MOTOR 3 //程序对转向做单独处理
-
 
 //使用PAINT机械参数7轴，冗余一轴
 //#define PAINT
@@ -82,7 +80,21 @@
 #define LIFT_WHEEL_PULSES_PER_CYCLR (SLIDE_MOTOR_SUBDIVDE*SLIDE_MOTOR_STEPS_PER_CYCLE)
 #define LIFT_PULSES_PER_UNIT ((SLIDE_WHEEL_PULSES_PER_CYCLR)/(SLIDE_DRIVER_TEETH*SLIDE_BELT_MOFULES))
 
+/*
+ * Paint use configuration only
+ */
+#define PAINT_ADD_HOME {2.4,0,0} //mm
+#define PAINT_RETURN_DISTANCE 10 //mm
+#define PAINT_HOME_RATE 10 // mm/s
+#define PAINT_DIVE_DISTANCE -1
 
+#define INVERT_WALK_DIR true //all walk motor
+
+#define INVERT_LEFT_WALK_DIR false
+#define INVERT_RIGHT_WALK_DIR false
+#define INVERT_TURN_WALK_DIR false
+
+#define TURN_ENDSTOP_INVERTING false
 
 //使用梯形加速
 //参数设置：
@@ -95,7 +107,6 @@
 //#define DEFAULT_MAX_FEEDRATE {500,500,500,500}//可容許的最大 nominal speed mm/sec
 //#define DEFAULT_MAX_ACCELERATION {5000,5000,5000,5000}//可容許的最大加速度mm/sec^2
 //#define DEFAULT_ACCELERATION {300,300,300,300}// 預設的加速度值 ，不同位置的位置的电机要有不同的加速度mm/sec^2
-
 
 //#define HOMING_FEEDRATE {50*60, 50*60, 50*60, 0}  // set the homing speeds (mm/min)
 
@@ -122,8 +133,6 @@
 
 //机械尺寸参数
 #define SLIDE_MAX_POSITION 6000 //mm //待确认
-
-
 
 //規畫兩條路徑的連接速度時，會對初速度做計算
 
@@ -152,7 +161,5 @@
 //已启用设置
 ////定义电机全局变量
 //#define DEFAULT_MIN_SPEED_FACTOR 30 //min speed = DEFAULT_MIN_SPEED_FACTOR X **MOTOR_SUBDIVIDE
-
-
 
 #endif /* CONFIGURATION_H_ */

@@ -79,7 +79,7 @@ static bool old_y_max_endstop = false;
 static bool old_z_min_endstop = false;
 static bool old_z_max_endstop = false;
 
-static bool check_endstops = true;
+static volatile bool check_endstops = true;
 
 volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0 };
 volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1 };
@@ -166,7 +166,10 @@ asm volatile ( \
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() TIMSK1 &= ~(1<<OCIE1A)
 
 char checkEndstopsHit() {
-
+	//no check enstop to move the axis away
+	if (!check_endstops) {
+		return -1;
+	}
 	if (endstop_x_hit) {
 		return X_AXIS;
 	}

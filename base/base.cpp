@@ -26,7 +26,7 @@ bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 		int saved_feedmultiply;
 		int extrudemultiply = 100;//100->1 200->2
 		uint8_t active_extruder = 0;
-#endif
+#endif //MARLIN
 
 //functions
 //in "marlin_main.cpp"
@@ -70,6 +70,24 @@ bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 		static bool home_all_axis = true;
 		static float feedrate = 1500.0,
 next_feedrate, saved_feedrate;
+
+#ifdef PAINTTEST
+
+static float walk_distination = 0; //walk distination
+float walk_current_position = 0; //walk current position
+static float walk_angle_distination = 0;
+float walk_current_angle = 0; //
+static float slide_angle = 0; // /*TODO slide body orientation */
+
+static bool checkanglestop = true;
+
+const char wlak_code[2] = { 'S', 'A' };
+static bool angle_know = false;
+static float walkfeedrate = 200, walknext_feedrate, walksaved_feedrate; // mm/s
+static float turnfeedrate = 20, turnnext_feedrate, turnsaved_feedrate; // degree/s
+static float walkacc = 9000000, next_walkacc, saved_walkacc; // degree/s
+#endif
+
 static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 
 static bool relative_mode = false; //Determines Absolute or Relative Coordinates
@@ -425,8 +443,8 @@ void walkadistancemmacc(bool dir, float speed, float distance, float acc) {
 	digitalWrite(RIGHT_WALK_MOTOR_DIR_PIN, dir);
 	float stepsspeed = speed * walkmotorleft.stepsPerUnit;
 	float delaytime = 1000000.0 / (stepsspeed);
-	float stepacc = acc
-			* (walkmotorleft.stepsPerUnit * walkmotorleft.stepsPerUnit); //steps^2/sec
+	float stepacc = acc;
+//	*(walkmotorleft.stepsPerUnit * walkmotorleft.stepsPerUnit); //steps/sec^2
 
 	float downaccsteps = (stepsspeed * stepsspeed
 			- walkmotorleft.startSpeed * walkmotorleft.startSpeed)
@@ -588,22 +606,36 @@ void turnananglestep(bool dir, float speed, long steps) {
 	}
 }
 
+void checkangleStop(bool check) {
+	checkanglestop = check;
+}
+
 //speed = angle /s  angle degree
 void turnanangleangle(bool dir, float speed, float angle) {
 	enableturnmotor();
 	enablwalkmotor();
 	long steps = angle * turnmotor.stepsperangel;
 
-	MYSERIAL.print("angle to steps =");
-	MYSERIAL.println(steps);
+//	MYSERIAL.print("angle to steps =");
+//	MYSERIAL.println(steps);
 
 	digitalWrite(TURN_MOTOR_DIR_PIN, !dir);
 	float delaytime = 1000000.0 / (speed * turnmotor.stepsperangel);
 
-	MYSERIAL.print("angle to steps  delaytime=");
-	MYSERIAL.println(delaytime);
+//	MYSERIAL.print("angle to steps  delaytime=");
+//	MYSERIAL.println(delaytime);
 
 	for (; steps > 0; steps--) {
+
+		if (!(angle_know) & checkanglestop) {
+			bool turn_endstop = (READ(ANGLE_CALIBRATION_STOP)
+					!= TURN_ENDSTOP_INVERTING);
+			if (turn_endstop) {
+
+				SERIAL_ECHOLNPGM("TURN STOP!");
+				break;
+			}
+		}
 		digitalWrite(TURN_MOTOR_STEP_PIN, HIGH);
 		delayMicroseconds(delaytime / 2);
 		digitalWrite(TURN_MOTOR_STEP_PIN, LOW);
@@ -615,19 +647,56 @@ void turnanangleangle(bool dir, float speed, float angle) {
 		turnmotor.angle = turnmotor.angle + angle;
 	}
 
-	MYSERIAL.print("TurnMotor Angle = ");
-	MYSERIAL.println(turnmotor.angle);
+//	MYSERIAL.print("TurnMotor Angle = ");
+//	MYSERIAL.println(turnmotor.angle);
 }
 
-//2015。09.27
+//2015.09.27
 //转向归零功能
 //->>>>>>>-endstophit -(LEFT_ERROR)-(ACTULLAY_POSITION)-(RIGHT_ERROR)-endsteprelease>>>>>>>>>-
 //以上-转向向量朝向-天花-这个转动方向是正向
 #define LEFT_ERROR 11.5
-#define RIGHT_ERROR -11.5
-void turnmotorhome(bool dir) {
-//dir is true for forward ;false for backward
+#define RIGHT_ERROR 11.5
+#define HOME_ANGLE 180 //turn home angle to hit the endstop
 
+void hometurnmotor(bool dir) {
+	//home the turn angle
+	//dir for direction to hit the endstop
+	angle_know = false;
+	bool turn_endstop = (READ(ANGLE_CALIBRATION_STOP) != TURN_ENDSTOP_INVERTING);
+	if (turn_endstop) {
+		checkangleStop(false);
+		turnanangleangle(dir ^ INVERT_TURN_WALK_DIR, turnfeedrate,
+		LEFT_ERROR + RIGHT_ERROR);
+	}
+	checkangleStop(true);
+	turnanangleangle(dir ^ INVERT_TURN_WALK_DIR, turnfeedrate, HOME_ANGLE);
+	SERIAL_ECHOLNPGM("NOT CHECKED! TURN INVERT!");
+	turn_endstop = (READ(ANGLE_CALIBRATION_STOP) != TURN_ENDSTOP_INVERTING);
+	if (!turn_endstop) {	//no hit  and invert!
+		dir = !dir;
+		turnanangleangle(dir ^ INVERT_TURN_WALK_DIR, turnfeedrate,
+				2 * HOME_ANGLE);
+	}
+	turn_endstop = (READ(ANGLE_CALIBRATION_STOP) != TURN_ENDSTOP_INVERTING);
+	if (turn_endstop) {
+		//in home the turn stop has be hit
+		angle_know = true; //angle is known
+		checkangleStop(false);
+		if (dir) {
+			turnanangleangle(dir ^ INVERT_TURN_WALK_DIR, turnfeedrate,
+			RIGHT_ERROR);
+		} else {
+			turnanangleangle(dir ^ INVERT_TURN_WALK_DIR, turnfeedrate,
+			LEFT_ERROR);
+		}
+		walk_current_angle = 0;
+
+	}
+	//refresh current walk angle
+	checkangleStop(false);
+	SERIAL_ECHOLNPGM("Angle Home Complete!");
+	angle_know = true;
 }
 
 //本函数结合一个定时器来发送脉冲
@@ -925,7 +994,7 @@ void serialmanager() {
 		}
 
 		if (input == 97) { //a 和转向角度相关的命令
-			//axxx(a-xxx)在方向上转动xxx度
+			//axxx(a-x)在方向上转动xxx度
 			float angle = MYSERIAL.parseFloat();
 			if (angle > 0) {
 				turnanangleangle(true, 15, abs(angle));
@@ -942,12 +1011,12 @@ void serialmanager() {
 //单个功能测试
 		//1 2 3 4 5 6 7 8 9 t
 		if (input == 117) { //u
-			slideup(1000, true);
+			slideup(1000, true); //slide up
 		}
 
 		if (input == 49) { //1
 //			walkadistancestep(true, 1000, 6400);
-			walkadistancemm(true, 30, 100);
+			walkadistancemm(true, 30, 100); //walk a distance
 		}
 		if (input == 50) { //2
 //			walkadistancestep(false, 1000, 6400);
@@ -955,11 +1024,11 @@ void serialmanager() {
 		}
 		if (input == 51) { //3
 //			turnananglestep(true, 1000, 800);
-			turnanangleangle(true, 15, 90);
+			turnanangleangle(true, 15, 90); //turn 90 degree
 		}
 		if (input == 52) { //4
 //			turnananglestep(false, 1000, 800);
-			turnanangleangle(false, 15, 90);
+			turnanangleangle(false, 15, 90); //turn 90 degree
 		}
 		if (input == 53) { //5
 			disablwalkmotor();
@@ -1022,6 +1091,8 @@ void setup() {
 	watchdog_init(); //初始2化
 	st_init();    // Initialize stepper, this enables interrupts!
 
+	//上电 锁死
+	enable_x();
 	//temporary 临时
 //	disableallmotor();
 }
@@ -1212,13 +1283,11 @@ void get_command() {
 				}
 
 				//If command was e-stop process now
-				if (strcmp(cmdbuffer[bufindw], "M112") == 0)
-					;
+//				if (strcmp(cmdbuffer[bufindw], "M112") == 0)
+//					;
 //          kill();
 				//收到命令 发送回来
-
 //				SERIAL_ECHOLN(cmdbuffer[bufindw]);
-				SERIAL_PROTOCOLLN("ok"); //收到有效指令发出OK
 				bufindw = (bufindw + 1) % BUFSIZE;
 				buflen += 1;
 			}
@@ -1333,8 +1402,150 @@ void process_commands() {
 			}
 			break;
 
-		case 28: //G28 Home all Axis one at a time
-			SERIAL_ECHOLN("G28 HOME CAN NOT BE USED NOW!");
+		case 2:
+			if (Stopped == false) {
+				//walk a distance
+				//G2 S100 A100 F100 V10 a100
+				//S for distance mm //V for anble velocity  mm/s F for walk velocity
+				//a for acc
+				//add X for
+				get_wlakcoordinates();				//获取目标距离和目标角度
+				if (code_seen('F')) {
+					walknext_feedrate = (float) code_value();
+					if (walknext_feedrate > 0)
+						walkfeedrate = walknext_feedrate;
+				}
+				if (code_seen('V')) {
+					turnnext_feedrate = (float) code_value();
+					if (turnnext_feedrate > 0)
+						turnfeedrate = turnnext_feedrate;
+				}
+				if (code_seen('a')) {
+					next_walkacc = (float) code_value();
+					if (next_walkacc > 0)
+						walkacc = next_walkacc;
+				}
+				//first data process
+				float anglediff = walk_angle_distination - walk_current_angle;
+				float walkdiff = walk_distination - walk_current_position;
+
+				//first turn to the distination angle
+				if (anglediff > 0) {
+					//转动到位
+					turnanangleangle(INVERT_TURN_WALK_DIR, turnfeedrate,
+							abs(anglediff));
+					//refresh the current angle
+				} else {
+					turnanangleangle(!INVERT_TURN_WALK_DIR, turnfeedrate,
+							abs(anglediff));
+				}
+				walk_current_angle = walk_angle_distination;
+
+				if (code_seen('X')) { //
+					//
+					if (walkdiff > 0) {
+						//转动到位
+						turndiferential(INVERT_WALK_DIR, walkfeedrate,
+								abs(walkdiff));
+					} else {
+						turndiferential(!INVERT_WALK_DIR, walkfeedrate,
+								abs(walkdiff));
+					}
+
+				} else {
+					//second walk a distination
+					if (walkdiff > 0) {
+						//转动到位
+						walkadistancemm(INVERT_WALK_DIR, walkfeedrate,
+								abs(walkdiff));
+//					walkadistancemmacc(INVERT_WALK_DIR, walkfeedrate,
+//							abs(walkdiff), walkacc);
+					} else {
+						walkadistancemm(!INVERT_WALK_DIR, walkfeedrate,
+								abs(walkdiff));
+//					walkadistancemmacc(!INVERT_WALK_DIR, walkfeedrate,
+//							abs(walkdiff), walkacc);
+					}
+					walk_current_position = walk_distination;
+				}					//
+
+			}
+			break;
+
+		case 3:
+
+			break;
+		case 28: //G28 Home all Axis one at a time //*TODO the function is not finished!*/
+			SERIAL_ECHOLN("HOME");
+
+			if (code_seen('A')) {
+				hometurnmotor(true);
+				break;
+			}
+
+			//home X_axis
+			saved_feedrate = feedrate; //save the feedrate
+			feedrate = PAINT_HOME_RATE * 60; //mm
+
+			char endstop = checkEndstopsHit();
+			//first
+			//move up
+			enable_endstops(false); //care the endstop
+			destination[X_AXIS] = PAINT_RETURN_DISTANCE;
+			SERIAL_ECHOPGM(" desination[X_AXIS]  =");
+			MYSERIAL.println(destination[X_AXIS]);
+			prepare_move();
+
+			//second
+			enable_endstops(true); //care the endstopM11
+			while (endstop == -1) { //no endstop hits
+				endstop = checkEndstopsHit();
+				destination[X_AXIS] += PAINT_DIVE_DISTANCE;
+				if (endstop == X_AXIS || endstop == Y_AXIS
+						|| endstop == Z_AXIS) {
+					break;
+				} else {
+					prepare_move();
+				}
+			}
+
+			//check
+
+			SERIAL_ECHOPGM(" desination[X_AXIS]-outer  =");
+			MYSERIAL.println(destination[X_AXIS]);
+			//have hit the home endstop
+			current_position[X_AXIS] = 0;
+			//执行home
+			for (short i = 0; i < 1; i++) {
+				//move up
+				enable_endstops(false); //care the endstop
+				destination[X_AXIS] = PAINT_RETURN_DISTANCE;
+				SERIAL_ECHOPGM(" desination[X_AXIS]  =");
+				MYSERIAL.println(destination[X_AXIS]);
+				prepare_move();
+				//move down
+				enable_endstops(true); //prepare to hit the endstop
+				destination[X_AXIS] = PAINT_DIVE_DISTANCE;
+				SERIAL_ECHOPGM(" desination[X_AXIS]  =");
+				MYSERIAL.println(destination[X_AXIS]);
+				prepare_move();
+
+			}
+			//move up
+			enable_endstops(false); //care the endstop
+			destination[X_AXIS] = PAINT_RETURN_DISTANCE;
+			SERIAL_ECHOPGM(" desination[X_AXIS]  =");
+			MYSERIAL.println(destination[X_AXIS]);
+			prepare_move();
+			current_position[X_AXIS] = PAINT_RETURN_DISTANCE;
+			enable_endstops(true); //care endstop
+
+			feedrate = saved_feedrate; //restore the feedtate
+
+			//home the turn angle
+			hometurnmotor(true);
+//			hometurnmotor(false);
+
 			break;
 		}
 	} else if (code_seen('M')) {
@@ -1378,6 +1589,13 @@ void process_commands() {
 							/ axis_steps_per_unit[Z_AXIS]);
 
 			SERIAL_PROTOCOLLN("");
+			SERIAL_PROTOCOLPGM(" WALK POSITION :");
+			SERIAL_PROTOCOL(walk_current_position);
+			SERIAL_PROTOCOLPGM(" mm   ");
+			SERIAL_PROTOCOLPGM(" WALK ANGLE :");
+			SERIAL_PROTOCOL(walk_current_angle);
+			SERIAL_PROTOCOLPGM(" degree   ");
+			SERIAL_PROTOCOLLN("");
 			break;
 		case 119: //print the end stops state
 			SERIAL_ECHOLN("Check Stops!");
@@ -1385,6 +1603,8 @@ void process_commands() {
 			break;
 		}
 	}
+	previous_millis_cmd = millis();
+	ClearToSend();
 }
 
 void prepare_move() {
@@ -1398,9 +1618,6 @@ void prepare_move() {
 	float difference[NUM_AXIS];
 	for (int8_t i = 0; i < NUM_AXIS; i++) {
 
-#if defined(PAINTTEST)
-
-#endif
 		difference[i] = destination[i] - current_position[i];
 
 //		MYSERIAL.print(i);
@@ -1436,9 +1653,24 @@ void prepare_move() {
 
 	for (int s = 1; s <= steps; s++) {
 		char endstop = checkEndstopsHit();
-		if (endstop == X_AXIS || endstop == Y_AXIS || endstop == Z_AXIS) {
-			SERIAL_ECHOPGM("STOP!");
-			return;
+		//
+		if (endstop == X_AXIS | endstop == Y_AXIS | endstop == Z_AXIS) {
+			SERIAL_ECHOLNPGM("STOP!");
+			//check hit
+//			checkHitEndstops();
+			//refresh the current_position
+//			for (int8_t i = 0; i < NUM_AXIS; i++) {
+//				current_position[i] = destination[i];
+//				//计算一次block，运行一次
+//				//			MYSERIAL.print(i);
+//				//			SERIAL_ECHO(" cur posi ");
+//				//			MYSERIAL.println(current_position[i]);
+//				//			MYSERIAL.print(i);
+//				//			SERIAL_ECHO(" destination ");
+//				//			MYSERIAL.println(destination[i]);
+//			}
+			break;
+//			return;
 		}
 
 		float fraction = float(s) / float(steps);
@@ -1473,16 +1705,7 @@ void prepare_move() {
 				active_extruder);
 #endif
 //每次都更新坐标
-		for (int8_t i = 0; i < NUM_AXIS; i++) {
-			current_position[i] = destination[i];
-			//计算一次block，运行一次
-			//			MYSERIAL.print(i);
-			//			SERIAL_ECHO(" cur posi ");
-			//			MYSERIAL.println(current_position[i]);
-			//			MYSERIAL.print(i);
-			//			SERIAL_ECHO(" destination ");
-			//			MYSERIAL.println(destination[i]);
-		}
+
 #endif
 
 #ifdef SCARA //for now same as delta-code
@@ -1670,6 +1893,20 @@ void calculate_delta(float cartesian[3]) {
 	 */
 }
 
+void get_wlakcoordinates() {
+	if (code_seen('S')) {
+		walk_distination = (float) code_value();
+	}
+	if (code_seen('A')) {
+		walk_angle_distination = (float) code_value();
+	}
+	SERIAL_ECHOPGM("walk_distance =");
+	SERIAL_ECHO(walk_distination);
+	SERIAL_ECHOPGM(" walk_angle_distination=");
+	SERIAL_ECHO(walk_angle_distination);
+	SERIAL_ECHOPGM("\n");
+}
+
 void get_coordinates() {
 	bool seen[4] = { false, false, false, false };
 	for (int8_t i = 0; i < NUM_AXIS; i++) {
@@ -1701,7 +1938,14 @@ bool code_seen(char code) {
 	strchr_pointer = strchr(cmdbuffer[bufindr], code);
 	return (strchr_pointer != NULL);  //Return True if a character was found
 }
-
+void ClearToSend() {
+	previous_millis_cmd = millis();
+#ifdef SDSUPPORT
+	if(fromsd[bufindr])
+	return;
+#endif //SDSUPPORT
+	SERIAL_PROTOCOLLNPGM(MSG_OK);
+}
 void FlushSerialRequestResend() {
 //char cmdbuffer[bufindr][100]="Resend:";
 	MYSERIAL.flush();

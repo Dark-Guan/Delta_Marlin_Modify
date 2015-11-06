@@ -33,6 +33,10 @@ void FlushSerialRequestResend();
 void process_commands();
 bool code_seen(char code);
 float code_value();
+
+
+void get_wlakcoordinates();//by Dark
+
 void get_coordinates();
 void prepare_move();
 void calculate_delta(float cartesian[3]);
